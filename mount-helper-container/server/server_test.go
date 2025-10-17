@@ -57,8 +57,8 @@ func TestHandleMounting(t *testing.T) {
 	sysOp := &MockSystemOperation{}
 
 	// Positive Test Case
-	t.Run("Valid Request", func(t *testing.T) {
-		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "requestID": "123"}`
+	t.Run("Valid Request ipsec", func(t *testing.T) {
+		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "transitEncryption": "ipsec", "requestID": "123"}`
 		req, err := http.NewRequest("POST", "/api/mount", strings.NewReader(jsonBody))
 		assert.NoError(t, err)
 
@@ -69,6 +69,33 @@ func TestHandleMounting(t *testing.T) {
 		handleMounting(sysOp)(c)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+	})
+	t.Run("Valid Request stunnel", func(t *testing.T) {
+		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "transitEncryption": "stunnel", "requestID": "123"}`
+		req, err := http.NewRequest("POST", "/api/mount", strings.NewReader(jsonBody))
+		assert.NoError(t, err)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = req
+
+		handleMounting(sysOp)(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("Invalid transit encryption value", func(t *testing.T) {
+		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "transitEncryption": "abc", "requestID": "123"}`
+		req, err := http.NewRequest("POST", "/api/mount", strings.NewReader(jsonBody))
+		assert.NoError(t, err)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = req
+
+		handleMounting(sysOp)(c)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	// Invalid Request
@@ -91,7 +118,7 @@ func TestHandleMounting(t *testing.T) {
 			return "", errors.New("mounting failed")
 		}
 
-		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "requestID": "123"}`
+		jsonBody := `{"mountPath": "/source", "targetPath": "/target", "fsType": "ibmshare", "transitEncryption": "ipsec",  "requestID": "123"}`
 		req, err := http.NewRequest("POST", "/api/mount", strings.NewReader(jsonBody))
 		assert.NoError(t, err)
 
