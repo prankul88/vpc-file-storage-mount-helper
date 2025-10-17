@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - offline-support-for-stunnel
 
 jobs:
   release:
